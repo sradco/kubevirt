@@ -152,14 +152,50 @@ tests:
         alertname: VirtOperatorDown
         exp_alerts: [ ]
 
-
-    # vmi running on a node with an unready virt-handler pod
+    # vmi running on a node with an unready virt-handler pod -
+    # When kube_pod_status_ready with condition="true" returns no value for the virt-handler pod
   - interval: 1m
     input_series:
       - series: 'kube_pod_info{pod="virt-launcher-testvm-123", node="node01"}'
         values: '1 1 1 1 1 1 1 1 1 1 1'
       - series: 'kube_pod_status_ready{pod="virt-handler-asdf", condition="true"}'
         values: '_ _ _ _ _ _ _ _ _ _ _'
+      - series: 'kube_pod_status_ready{pod="virt-handler-asdf", condition="false"}'
+        values: '1 1 1 1 1 1 1 1 1 1 1'
+      - series: 'kube_pod_info{pod="virt-handler-asdf", node="node01"}'
+        values: '1 1 1 1 1 1 1 1 1 1 1'
+      - series: 'kube_pod_info{pod="virt-launcher-vmi", node="node02"}'
+        values: '1 1 1 1 1 1 1 1 1 1 1'
+      - series: 'kube_pod_status_ready{pod="virt-handler-asdfg", condition="true"}'
+        values: '1 1 1 1 1 1 1 1 1 1 1'
+      - series: 'kube_pod_info{pod="virt-handler-asdfg", node="node02"}'
+        values: '1 1 1 1 1 1 1 1 1 1 1'
+
+    alert_rule_test:
+      # no alert before 10 minutes
+      - eval_time: 9m
+        alertname: OrphanedVirtualMachineInstances
+        exp_alerts: [ ]
+      - eval_time: 10m
+        alertname: OrphanedVirtualMachineInstances
+        exp_alerts:
+          - exp_annotations:
+              summary: "No ready virt-handler pod detected on node node01 with running vmis for more than 10 minutes"
+              runbook_url: "https://kubevirt.io/monitoring/runbooks/OrphanedVirtualMachineInstances"
+            exp_labels:
+              node: "node01"
+              severity: "warning"
+              kubernetes_operator_part_of: "kubevirt"
+              kubernetes_operator_component: "kubevirt"
+
+      # vmi running on a node with an unready virt-handler pod -
+      # When kube_pod_status_ready with condition="true" doesn't return 0 value for the virt-handler pod
+  - interval: 1m
+    input_series:
+      - series: 'kube_pod_info{pod="virt-launcher-testvm-123", node="node01"}'
+        values: '1 1 1 1 1 1 1 1 1 1 1'
+      - series: 'kube_pod_status_ready{pod="virt-handler-asdf", condition="true"}'
+        values: '0 0 0 0 0 0 0 0 0 0 0'
       - series: 'kube_pod_status_ready{pod="virt-handler-asdf", condition="false"}'
         values: '1 1 1 1 1 1 1 1 1 1 1'
       - series: 'kube_pod_info{pod="virt-handler-asdf", node="node01"}'
