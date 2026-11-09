@@ -25,6 +25,15 @@ reviews:
       instructions: "Follow the rules in pkg/virt-launcher/virtwrap/converter/README.md."
     - path: "pkg/monitoring/**"
       instructions: "See docs/observability/monitoring-guidelines.md."
+    - path: "pkg/monitoring/rules/alerts/vms.go"
+      instructions: >
+        VM-scoped alerts must include a "vm" typed resource label for
+        alert-to-resource navigation in the monitoring-plugin. Use the
+        withVMLabel() helper to wrap the PromQL expression. Only
+        infrastructure/aggregate alerts (VirtLauncherPodsStuckFailed,
+        OrphanedVirtualMachineInstances, OutdatedVirtualMachineInstanceWorkloads,
+        KubeVirtVMIExcessiveMigrations) are exempt.
+        See docs/observability/monitoring-guidelines.md.
     - path: "{staging/src/kubevirt.io/api,pkg/virt-api/webhooks}/**"
       instructions: "Follow the rules in docs/api/design_guidelines.md."
   tools:

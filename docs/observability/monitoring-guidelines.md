@@ -62,3 +62,10 @@ When creating a KubeVirt alert rule, please see the following :
      - Info alerts - When a minor problem has been detected. It should be resolved relatively soon and not ignored.
 
 5. Alert `message` must be verbose, since it is being propagated to the [observability/metrics.md](https://github.com/kubevirt/kubevirt/blob/main/docs/observability/metrics.md) file, when running `make-generate`.
+
+#### VM-Scoped Alerts Must Include a `vm` Typed Resource Label
+
+VM-scoped alerts (those in `vmsAlerts` that target a specific VM) MUST include a `vm` typed resource label. This enables the monitoring-plugin to navigate from alerts to the VM resource page.
+
+- Use the `withVMLabel()` helper in `pkg/monitoring/rules/alerts/vms.go` to add the label.
+- Infrastructure/aggregate alerts are exempt: `VirtLauncherPodsStuckFailed`, `OrphanedVirtualMachineInstances`, `OutdatedVirtualMachineInstanceWorkloads`, `KubeVirtVMIExcessiveMigrations`.
